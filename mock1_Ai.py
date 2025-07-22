@@ -21,10 +21,12 @@ class ChatMessage(BaseModel):
 
 
 class ChatRequest(BaseModel):
+
     messages: List[ChatMessage]
-    role: str
-    content: str
     model: str = "gpt-4-turbo"
+    # role: str
+    # body: str
+    content: str
     temperature: float = 0.7
     max_tokens: int = 100
     stream: bool = False
@@ -46,7 +48,7 @@ def generate_mock_llm_response(prompt: str, is_chat: bool = False) -> str:
     return random.choice(responses)
 
 
-@app.post("/v1/completions")
+@app.post("/v1/completions/prompt")
 async def create_completion(request: CompletionRequest):
     """Mock OpenAI completion endpoint"""
     response_id = f"cmpl-{random.randint(1000, 9999)}"
@@ -83,7 +85,7 @@ async def create_completion(request: CompletionRequest):
     return response
 
 
-@app.post("/v1/chat/completions")
+@app.post("/v1/chat/completions/message")
 async def create_chat_completion(request: ChatRequest):
     """Mock OpenAI chat endpoint"""
     response_id = f"chatcmpl-{random.randint(1000, 9999)}"

@@ -3,4 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.13 (PythonProject_Sandbox)" />
   </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.11 (Python_Sandbox)" project-jdk-type="Python SDK" />
 </project>
