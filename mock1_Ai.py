@@ -1,12 +1,17 @@
+import logging
+
+import app
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict
 import time
 import random
 import uvicorn
+from prometheus_fastapi_instrumentator import Instrumentator
+
 
 app = FastAPI(title="Mock LLM API Server")
-
+Instrumentator().instrument(app).expose(app)
 
 class CompletionRequest(BaseModel):
     prompt: str
@@ -23,15 +28,18 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
 
     messages: List[ChatMessage]
+    role: str
     model: str = "gpt-4-turbo"
-    # role: str
-    # body: str
     content: str
     temperature: float = 0.7
     max_tokens: int = 100
     stream: bool = False
 
-
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 # In-memory "database" of generated responses
 response_history: Dict[str, dict] = {}
 
@@ -45,6 +53,7 @@ def generate_mock_llm_response(prompt: str, is_chat: bool = False) -> str:
         "Mock response: The answer is 42.",
         f"Analysis of '{prompt}': [MOCK DATA]"
     ]
+
     return random.choice(responses)
 
 
@@ -53,13 +62,12 @@ async def create_completion(request: CompletionRequest):
     """Mock OpenAI completion endpoint"""
     response_id = f"cmpl-{random.randint(1000, 9999)}"
     response_text = generate_mock_llm_response(request.prompt)
-
+    time.sleep(10.1) # - время отклика
     if request.stream:
         # Simulate streaming response
         def generate():
             for word in response_text.split():
                 yield f"data: {{\"id\": \"{response_id}\", \"choices\": [{{\"text\": \"{word} \", \"index\": 0}}]}}\n\n"
-                time.sleep(0.1)
             yield "data: [DONE]\n\n"
 
         return generate()
