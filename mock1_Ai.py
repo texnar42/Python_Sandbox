@@ -30,12 +30,13 @@ class ChatMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: List[ChatMessage]
-    role: str
-    model: str = "gpt-4-turbo"
-    content: str
-    temperature: float = 0.7
     #max_tokens: int = 100
     #stream: bool = False
+    model: str = "gpt-4-turbo"
+    role: str
+    content: str
+    stream: bool = False
+    temperature: float = 0.7
 
 # In-memory "database" of generated responses
 response_history: Dict[str, dict] = {}
@@ -130,41 +131,41 @@ async def create_chat_completion(request: ChatMessage):
 @app.post("/v1/chat/completions/message")
 async def create_chat_completion(request: ChatRequest):
     """Mock OpenAI chat endpoint"""
-    response_id = f"chatcmpl-{random.randint(1000, 9999)}"
+    # response_id = f"chatcmpl-{random.randint(1000, 9999)}"
     last_message = request.messages[-1].content
     response_text = generate_mock_llm_response(last_message, is_chat=True)
+print("!!!!")
+    # if request.stream:
+    #     # Simulate streaming chat response
+    #     def generate():
+    #         for word in response_text.split():
+    #             yield f"data: {{\"id\": \"{response_id}\", \"choices\": [{{\"delta\": {{\"content\": \"{word} \"}}, \"index\": 0}}]}}\n\n"
+    #         yield "data: [DONE]\n\n"
+    #
+    #     # return generate()
+    # return StreamingResponse(generate(), media_type="text/event-stream")
 
-    if request.stream:
-        # Simulate streaming chat response
-        def generate():
-            for word in response_text.split():
-                yield f"data: {{\"id\": \"{response_id}\", \"choices\": [{{\"delta\": {{\"content\": \"{word} \"}}, \"index\": 0}}]}}\n\n"
-            yield "data: [DONE]\n\n"
-
-        # return generate()
-    return StreamingResponse(generate(), media_type="text/event-stream")
-
-    response = {
-        "id": response_id,
-        "object": "chat.completion",
-        "created": int(time.time()),
-        "model": request.model,
-        "choices": [{
-            "message": {
-                "role": "assistant",
-                "content": response_text
-            },
-            "index": 0,
-            "finish_reason": "stop"
-        }],
-        "usage": {
-            "prompt_tokens": sum(len(m.content.split()) for m in request.messages),
-            "completion_tokens": len(response_text.split()),
-            "total_tokens": sum(len(m.content.split()) for m in request.messages) + len(response_text.split())
-        }
-    }
-    response_history[response_id] = response
-    return response
+    # response = {
+    #     "id": response_id,
+    #     "object": "chat.completion",
+    #     "created": int(time.time()),
+    #     "model": request.model,
+    #     "choices": [{
+    #         "message": {
+    #             "role": "assistant",
+    #             "content": response_text
+    #         },
+    #         "index": 0,
+    #         "finish_reason": "stop"
+    #     }],
+    #     "usage": {
+    #         "prompt_tokens": sum(len(m.content.split()) for m in request.messages),
+    #         "completion_tokens": len(response_text.split()),
+    #         "total_tokens": sum(len(m.content.split()) for m in request.messages) + len(response_text.split())
+    #     }
+    # }
+    # response_history[response_id] = response
+    # return response
 
 
 @app.get("/v1/responses/{response_id}")
