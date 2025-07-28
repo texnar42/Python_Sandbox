@@ -60,7 +60,8 @@ async def create_completion(request: CompletionRequest):
     """Mock OpenAI completion endpoint"""
     response_id = f"cmpl-{random.randint(1000, 9999)}"
     response_text = generate_mock_llm_response(request.prompt)
-    time.sleep(10.1) # - время отклика
+    #time.sleep(10.1) # - время отклика
+    time.sleep = random.randint(10.1, 20.1)
     if request.stream:
         # Simulate streaming response
         def generate():

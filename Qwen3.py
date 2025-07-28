@@ -1,12 +1,17 @@
+import random
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from datetime import datetime
 import uuid
 import time
 from typing import Optional
+from prometheus_fastapi_instrumentator import Instrumentator
+from fastapi.responses import StreamingResponse
+
 
 app = FastAPI(title="Mock GPT-4-Turbo API")
-
+Instrumentator().instrument(app).expose(app)
 
 class ChatMessage(BaseModel):
     role: str  # "system", "user" or "assistant"
@@ -14,7 +19,7 @@ class ChatMessage(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    model: str = "gpt-4-turbo"
+    model: str = "Qwen3-235B-A22B-2507"
     messages: list[ChatMessage]
     max_tokens: Optional[int] = 100
     temperature: Optional[float] = 0.7
@@ -41,7 +46,7 @@ class ChatResponse(BaseModel):
     choices: list[ChatResponseChoice]
     usage: ChatResponseUsage
 
-
+print(type(random))
 def generate_mock_response(request: ChatRequest):
     """Генерирует mock-ответ, похожий на ответ GPT-4-turbo"""
     last_message = request.messages[-1]
@@ -80,10 +85,15 @@ async def chat_completion(request: ChatRequest):
     if not request.messages:
         raise HTTPException(status_code=400, detail="Messages cannot be empty")
 
-    if request.model != "gpt-4-turbo":
+    if request.model != "Qwen3-235B-A22B-2507":
         raise HTTPException(status_code=400,
-                            detail=f"Model {request.model} is not supported. Only gpt-4-turbo is available")
+                            detail=f"Model {request.model} is not supported. Only Qwen3-235B-A22B-2507 is available")
 
+    number = random.uniform(5.1, 10.2)
+    time.sleep(number)
+
+    print(type(number))
+    #time.sleep(10.1)
     return generate_mock_response(request)
 
 
