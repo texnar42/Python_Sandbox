@@ -88,12 +88,11 @@ async def chat_completion(request: ChatRequest):
     if request.model != "Qwen3-235B-A22B-2507":
         raise HTTPException(status_code=400,
                             detail=f"Model {request.model} is not supported. Only Qwen3-235B-A22B-2507 is available")
-
+    #Время отклика на заглушке
     number = random.uniform(5.1, 10.2)
     time.sleep(number)
 
     print(type(number))
-    #time.sleep(10.1)
     return generate_mock_response(request)
 
 
