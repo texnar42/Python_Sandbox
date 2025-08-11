@@ -13,6 +13,11 @@ class MongoDBConfigExporter:
             'MongoDB configuration parameters',
             ['section', 'key', 'source']
         )
+        self.config_parameter1 = Gauge(
+            'mongodb_config_parameter1',
+            'MongoDB configuration parameters',
+            ['section', 'key', 'source']
+        )
 
     def get_runtime_config(self):
         """Получаем runtime-параметры из MongoDB"""
@@ -24,42 +29,51 @@ class MongoDBConfigExporter:
                 'getParameter': 1,
                 'wiredTigerFileHandleCloseMinimum': 1
             })
-            result1 = client.admin.command(
-                {
-                'getParameter': 1,
-                'wiredTigerFileHandleCloseMinimum': 1
-            })
             return result.get('wiredTigerFileHandleCloseMinimum', None)
         except Exception as e:
             print(f"Runtime config error: {e}")
             return None
 
-    def get_file_config(self, config_path="/etc/mongod.conf"):
-        """Читаем параметр из конфиг-файла"""
-        try:
-            if not os.path.exists(config_path):
-                return None
+            # result1 = client.admin.command({
+            #     'getParameter': 1,
+            #     'failIndexKeyTooLong': 1
+            # })#
+    # 'notablescan': 1, # // Запрет table scan
+    # 'replWriterThreadCount': 1, #
+    # 'enableLocalhostAuthBypass': 1, #
+    # 'balancerStopped': 1,#
+    # 'journalCommitInterval': 1, #
+    # 'wiredTigerConcurrentReadTransactions': 1, #
+    # 'wiredTigerConcurrentWriteTransactions': 1, #
+    # 'cursorTimeoutMillis': 1, #
+    # 'transactionLifetimeLimitSeconds': 1 #
 
-            config = configparser.ConfigParser()
-            config.read(config_path)
-
-            # Параметр находится в секции [wiredTiger]
-            if 'wiredTiger' in config:
-                return config['wiredTiger'].get('fileHandleCloseMinimum', None)
-
-            if 'wiredTiger' in config:
-                return config['wiredTiger'].get('fileHandleCloseMinimum', None)
-
-            if 'wiredTiger' in config:
-                return config['wiredTiger'].get('fileHandleCloseMinimum', None)
-
-            if 'wiredTiger' in config:
-                return config['wiredTiger'].get('fileHandleCloseMinimum', None)
-
-            return None
-        except Exception as e:
-            print(f"File config error: {e}")
-            return None
+    # def get_file_config(self, config_path="/etc/mongod.conf"):
+    #     """Читаем параметр из конфиг-файла"""
+    #     try:
+    #         if not os.path.exists(config_path):
+    #             return None
+    #
+    #         config = configparser.ConfigParser()
+    #         config.read(config_path)
+    #
+    #         # Параметр находится в секции [wiredTiger]
+    #         if 'wiredTiger' in config:
+    #             return config['wiredTiger'].get('fileHandleCloseMinimum', None)
+    #
+    #         if 'wiredTiger' in config:
+    #             return config['wiredTiger'].get('fileHandleCloseMinimum', None)
+    #
+    #         if 'wiredTiger' in config:
+    #             return config['wiredTiger'].get('fileHandleCloseMinimum', None)
+    #
+    #         if 'wiredTiger' in config:
+    #             return config['wiredTiger'].get('fileHandleCloseMinimum', None)
+    #
+    #         return None
+    #     except Exception as e:
+    #         print(f"File config error: {e}")
+    #         return None
 
     def update_metrics(self):
         """Обновляем метрики"""
@@ -72,20 +86,25 @@ class MongoDBConfigExporter:
                     key='fileHandleCloseMinimum',
                     source='runtime'
                 ).set(runtime_value)
+                self.config_parameter1.labels(
+                    section='wiredTiger',
+                    key='fileHandleCloseMinimum',
+                    source='runtime'
+                ).set(runtime_value)
 
             # Значение из конфиг-файла
-            file_value = self.get_file_config()
-            if file_value is not None:
-                # Преобразуем строку в число
-                try:
-                    file_value = int(file_value)
-                    self.config_parameters.labels(
-                        section='wiredTiger',
-                        key='fileHandleCloseMinimum',
-                        source='configFile'
-                    ).set(file_value)
-                except ValueError:
-                    print("Invalid config value")
+            # file_value = self.get_file_config()
+            # if file_value is not None:
+            #     # Преобразуем строку в число
+            #     try:
+            #         file_value = int(file_value)
+            #         self.config_parameters.labels(
+            #             section='wiredTiger',
+            #             key='fileHandleCloseMinimum',
+            #             source='configFile'
+            #         ).set(file_value)
+            #     except ValueError:
+            #         print("Invalid config value")
 
             time.sleep(30)
 

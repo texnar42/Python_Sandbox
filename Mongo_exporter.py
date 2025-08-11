@@ -55,7 +55,10 @@ class MongoDBConfigMetrics:
 
             # Получаем текущую конфигурацию
             config = {
-                #'settings': admin_db.command({getParameter: '*'}),
+                'settings': admin_db.command({
+                'getParameter': 1,
+                'wiredTigerFileHandleCloseMinimum': 1
+            }),
                 'status': admin_db.command('serverStatus'),
                 #'sharding': admin_db.command('getShardingConfig')
             }
