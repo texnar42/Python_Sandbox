@@ -26,18 +26,24 @@ class MongoDBConfigExporter:
             # Получаем параметр через getParameter
             result = client.admin.command(
                 {
-                'getParameter': 1,
-                'wiredTigerFileHandleCloseMinimum': 1
+                    'getParameter': 1,
+                    'notablescan': 1, # // Запрет table scan
+                    'replWriterThreadCount': 1, #
+                    'enableLocalhostAuthBypass': 1, #
+                    'balancerStopped': 1,#
+                    'journalCommitInterval': 1, #
+                    'wiredTigerConcurrentReadTransactions': 1, #
+                    'wiredTigerConcurrentWriteTransactions': 1, #
+                    'cursorTimeoutMillis': 1, #
+                    'transactionLifetimeLimitSeconds': 1 #
+                # 'getParameter': 1,
+                # 'wiredTigerFileHandleCloseMinimum': 1
             })
             return result.get('wiredTigerFileHandleCloseMinimum', None)
+
         except Exception as e:
             print(f"Runtime config error: {e}")
             return None
-
-            # result1 = client.admin.command({
-            #     'getParameter': 1,
-            #     'failIndexKeyTooLong': 1
-            # })#
     # 'notablescan': 1, # // Запрет table scan
     # 'replWriterThreadCount': 1, #
     # 'enableLocalhostAuthBypass': 1, #
@@ -81,12 +87,12 @@ class MongoDBConfigExporter:
             # Runtime значение (из работающего сервера)
             runtime_value = self.get_runtime_config()
             if runtime_value is not None:
-                self.config_parameters.labels(
-                    section='wiredTiger',
-                    key='fileHandleCloseMinimum',
+                self.config_parameters1.labels(
+                    section='notables',
+                    key='scan',
                     source='runtime'
                 ).set(runtime_value)
-                self.config_parameter1.labels(
+                self.config_parameter.labels(
                     section='wiredTiger',
                     key='fileHandleCloseMinimum',
                     source='runtime'
