@@ -3,12 +3,13 @@ import logging
 import app
 import openai
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Dict
 import time
 import random
 import uvicorn
 from prometheus_fastapi_instrumentator import Instrumentator
+from fastapi.responses import StreamingResponse
 
 
 app = FastAPI(title="Mock LLM API Server")
@@ -24,36 +25,22 @@ class CompletionRequest(BaseModel):
 class ChatMessage(BaseModel):
     role: str
     content: str
+    stream: bool = False
 
 
 class ChatRequest(BaseModel):
-
     messages: List[ChatMessage]
-    role: str
-    model: str = "gpt-4-turbo"
-    content: str
-    temperature: float = 0.7
-    max_tokens: int = 100
+    #max_tokens: int = 100
     #stream: bool = False
+    model: str = "gpt-4-turbo"
+    role: str
+    content: str
+    stream: bool = False
+    temperature: float = 0.7
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 # In-memory "database" of generated responses
 response_history: Dict[str, dict] = {}
 
-@app.post("/chat")
-async def chat_endpoint(request: ChatRequest):
-    """Эндпоинт для запросов к ChatGPT"""
-    response = openai.ChatCompletion.create(
-        model=request.model,
-        messages=[msg.dict() for msg in request.messages],
-        temperature=request.temperature,
-        max_tokens=request.max_tokens
-    )
-    return response.choices[0].message.content
 
 def generate_mock_llm_response(prompt: str, is_chat: bool = False) -> str:
     """Generate a realistic mock LLM response"""
@@ -73,7 +60,8 @@ async def create_completion(request: CompletionRequest):
     """Mock OpenAI completion endpoint"""
     response_id = f"cmpl-{random.randint(1000, 9999)}"
     response_text = generate_mock_llm_response(request.prompt)
-    time.sleep(10.1) # - время отклика
+    #time.sleep(10.1) # - время отклика
+    time.sleep = random.randint(10.1, 20.1)
     if request.stream:
         # Simulate streaming response
         def generate():
@@ -144,40 +132,41 @@ async def create_chat_completion(request: ChatMessage):
 @app.post("/v1/chat/completions/message")
 async def create_chat_completion(request: ChatRequest):
     """Mock OpenAI chat endpoint"""
-    response_id = f"chatcmpl-{random.randint(1000, 9999)}"
+    # response_id = f"chatcmpl-{random.randint(1000, 9999)}"
     last_message = request.messages[-1].content
     response_text = generate_mock_llm_response(last_message, is_chat=True)
+print("!!!!")
+    # if request.stream:
+    #     # Simulate streaming chat response
+    #     def generate():
+    #         for word in response_text.split():
+    #             yield f"data: {{\"id\": \"{response_id}\", \"choices\": [{{\"delta\": {{\"content\": \"{word} \"}}, \"index\": 0}}]}}\n\n"
+    #         yield "data: [DONE]\n\n"
+    #
+    #     # return generate()
+    # return StreamingResponse(generate(), media_type="text/event-stream")
 
-    if request.stream:
-        # Simulate streaming chat response
-        def generate():
-            for word in response_text.split():
-                yield f"data: {{\"id\": \"{response_id}\", \"choices\": [{{\"delta\": {{\"content\": \"{word} \"}}, \"index\": 0}}]}}\n\n"
-            yield "data: [DONE]\n\n"
-
-        return generate()
-
-    response = {
-        "id": response_id,
-        "object": "chat.completion",
-        "created": int(time.time()),
-        "model": request.model,
-        "choices": [{
-            "message": {
-                "role": "assistant",
-                "content": response_text
-            },
-            "index": 0,
-            "finish_reason": "stop"
-        }],
-        "usage": {
-            "prompt_tokens": sum(len(m.content.split()) for m in request.messages),
-            "completion_tokens": len(response_text.split()),
-            "total_tokens": sum(len(m.content.split()) for m in request.messages) + len(response_text.split())
-        }
-    }
-    response_history[response_id] = response
-    return response
+    # response = {
+    #     "id": response_id,
+    #     "object": "chat.completion",
+    #     "created": int(time.time()),
+    #     "model": request.model,
+    #     "choices": [{
+    #         "message": {
+    #             "role": "assistant",
+    #             "content": response_text
+    #         },
+    #         "index": 0,
+    #         "finish_reason": "stop"
+    #     }],
+    #     "usage": {
+    #         "prompt_tokens": sum(len(m.content.split()) for m in request.messages),
+    #         "completion_tokens": len(response_text.split()),
+    #         "total_tokens": sum(len(m.content.split()) for m in request.messages) + len(response_text.split())
+    #     }
+    # }
+    # response_history[response_id] = response
+    # return response
 
 
 @app.get("/v1/responses/{response_id}")

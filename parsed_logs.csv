@@ -1,0 +1,4 @@
+Date,Method,URL
+15/Jul/2025:10:15:30 +0300,GET,/index.html
+15/Jul/2025:10:15:32 +0300,GET,/images/logo.png
+15/Jul/2025:10:15:33 +0300,POST,/submit-form
